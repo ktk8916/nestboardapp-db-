@@ -11,26 +11,36 @@ export class BoardService {
     private boardRepository: BoardRepository,
   ) {}
 
-  async createBoard(createBoardDto: CreateBoardDto): Promise<Board> {
-    const { title, content } = createBoardDto;
+  async getAllBoard(): Promise<Board[]> {
+    return await this.boardRepository.find();
+  }
 
-    const board = this.boardRepository.create({
-      title,
-      content,
-      status: BoardStatus.PUBLIC,
-    });
-
-    await this.boardRepository.save(board);
-    return board;
+  createBoard(createBoardDto: CreateBoardDto): Promise<Board> {
+    return this.boardRepository.createBoard(createBoardDto);
   }
 
   async getBoardById(id: number): Promise<Board> {
     const found = await this.boardRepository.findOneBy({ id });
 
     if (!found) {
-      throw new NotFoundException('게시글 없음');
+      throw new NotFoundException(`Not found board id : ${id}`);
     }
     return found;
+  }
+
+  async deleteBoard(id: number) {
+    const retult = await this.boardRepository.delete(id);
+    if (retult.affected === 0) {
+      throw new NotFoundException(`Not found board id : ${id}`);
+    }
+  }
+
+  async updateBoardStatus(id: number, status: BoardStatus): Promise<Board> {
+    const board = await this.getBoardById(id);
+    board.status = status;
+
+    await this.boardRepository.save(board);
+    return board;
   }
 }
 
